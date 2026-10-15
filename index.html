@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gideon — Gerenciador</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="refinamento.css">
+     <script src="clima.js"></script>
+</head>
+
+<body>
+
+  <!-- ===================== LOGIN ===================== -->
+  <div id="loginScreen" class="login-screen" hidden>
+    <form id="loginForm" class="login-card" novalidate data-modo="entrar">
+      <div class="brand-mark">G</div>
+      <h1>Gideon</h1>
+      <p>Não é bagunça, faça login!.</p>
+
+      <div class="login-tabs" role="tablist" data-so-modo="entrar criar">
+        <button type="button" role="tab" data-modo-login="entrar" class="ativo" aria-selected="true">Entrar</button>
+        <button type="button" role="tab" data-modo-login="criar" aria-selected="false">Criar conta</button>
+      </div>
+
+      <p class="login-explica" data-so-modo="recuperar" hidden>Digite seu e-mail. Vamos enviar um link para você criar uma nova senha.</p>
+
+      <label data-so-modo="criar" hidden>
+        Como quer ser chamada(o)?
+        <input type="text" id="loginNome" autocomplete="given-name" placeholder="Seu nome ou apelido">
+      </label>
+      <label>
+        E-mail
+        <input type="email" id="loginEmail" autocomplete="email" inputmode="email">
+      </label>
+      <label data-so-modo="entrar criar">
+        Senha
+        <input type="password" id="loginSenha" autocomplete="current-password">
+      </label>
+
+      <button class="save-button" type="submit" id="loginBotao">Entrar</button>
+
+      <button class="link-button" type="button" id="esqueciSenha" data-so-modo="entrar">Esqueci minha senha</button>
+      <button class="link-button" type="button" id="voltarLogin" data-so-modo="recuperar" hidden>← Voltar para o login</button>
+
+      <div id="loginErro" class="form-message error" role="alert"></div>
+      <div id="loginAviso" class="form-message" role="status"></div>
+    </form>
+  </div>
+
+  <!-- ===================== PERFIL ===================== -->
+  <div id="perfilModal" class="login-screen modal-screen" hidden>
+    <form id="perfilForm" class="login-card" novalidate>
+      <h1 id="perfilTitulo">Seu perfil</h1>
+      <p>Esse nome aparece na saudação e é como o Gideon vai te chamar.</p>
+
+      <label>
+        Seu nome
+        <input type="text" id="perfilNome" autocomplete="given-name">
+      </label>
+      <label>
+        <span>Nome do seu gestor <span class="opcional">(opcional)</span></span>
+        <input type="text" id="perfilGestor" placeholder="Ex.: Rodrigo">
+      </label>
+      <label>
+        Como aparece no menu
+        <select id="perfilArtigo">
+          <option value="do">Pedidos do …</option>
+          <option value="da">Pedidos da …</option>
+        </select>
+      </label>
+
+      <div class="modal-acoes">
+        <button class="save-button" type="submit" id="perfilSalvar">Salvar</button>
+        <button class="secondary-button" type="button" id="perfilCancelar">Cancelar</button>
+      </div>
+      <div id="perfilErro" class="form-message error" role="alert"></div>
+    </form>
+  </div>
+
+  <!-- ===================== NOVA SENHA ===================== -->
+  <div id="senhaModal" class="login-screen modal-screen" hidden>
+    <form id="senhaForm" class="login-card" novalidate>
+      <h1>Nova senha</h1>
+      <p>Escolha uma nova senha para a sua conta.</p>
+      <label>
+        Nova senha
+        <input type="password" id="novaSenha" autocomplete="new-password">
+      </label>
+      <button class="save-button" type="submit">Salvar nova senha</button>
+      <div id="senhaErro" class="form-message error" role="alert"></div>
+    </form>
+  </div>
+
+  <div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" id="brandIniciais">G</div>
+        <div>
+          <strong>Gideon</strong>
+          <span>Gerenciador pessoal</span>
+        </div>
+      </div>
+
+      <div class="sync-box">
+        <div id="syncStatus" class="sync-status" data-estado="local">
+          <span class="sync-dot"></span>
+          <span class="sync-text">Carregando…</span>
+        </div>
+        <div class="sync-account">
+          <span id="syncEmail"></span>
+          <span class="sync-links">
+            <button id="perfilButton" class="text-button" type="button">Perfil</button>
+            <button id="logoutButton" class="text-button" type="button">Sair</button>
+          </span>
+        </div>
+      </div>
+
+      <nav class="nav-list" aria-label="Navegação principal">
+        <button class="nav-item active" data-view="day" type="button">
+          <span class="nav-icon">01</span><span>Painel do Dia</span>
+        </button>
+
+        <button class="nav-item" data-view="demands" type="button">
+          <span class="nav-icon">02</span><span>Todas as Demandas</span>
+        </button>
+
+        <button class="nav-item" data-view="rodrigo" type="button">
+          <span class="nav-icon">03</span><span data-rotulo="pedidos">Pedidos do gestor</span>
+        </button>
+
+        <button class="nav-item" data-view="treino" type="button">
+          <span class="nav-icon">04</span><span>Treino</span>
+        </button>
+
+        <button class="nav-item" data-view="estudo" type="button">
+          <span class="nav-icon">05</span><span>Estudo</span>
+        </button>
+
+        <button class="nav-item" data-view="planejamento" type="button">
+          <span class="nav-icon">06</span><span>Planejamento</span>
+        </button>
+
+        <button class="nav-item" data-view="processes" type="button">
+          <span class="nav-icon">07</span><span>Base de Processos</span>
+        </button>
+
+        <button class="nav-item" data-view="input" type="button">
+          <span class="nav-icon">08</span><span>Input de Tarefas</span>
+        </button>
+
+        <button class="nav-item" data-view="manage" type="button">
+          <span class="nav-icon">09</span><span>Banco de Tarefas</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-line"></div>
+        <span>Respeite</span>
+        <span>Rigorosamente</span>
+        <span>O comando</span>
+        <span>777</span>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- HEADER -->
+      <header class="top-header">
+        <div class="header-copy">
+          <div id="currentDate" class="date-label"></div>
+          <h1 id="greeting">Olá!</h1>
+          <p>Organize o que importa. Execute o próximo passo.</p>
+        </div>
+
+        <div class="header-tools">
+          <div class="clock" id="clock">00:00:00</div>
+
+          <div class="mini-calendar">
+            <div class="mini-calendar-top">
+              <span id="calendarMonth"></span>
+              <span id="calendarDay"></span>
+            </div>
+            <div class="calendar-week">
+              <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+            </div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ===================== PAINEL DO DIA ===================== -->
+      <section id="view-day" class="view active-view">
+
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">VISÃO GERAL</span>
+            <h2>Painel do Dia</h2>
+          </div>
+          <span class="today-badge">HOJE</span>
+        </div>
+
+        <article class="card hero-card">
+          <div>
+            <span class="card-label">PRÓXIMO PASSO</span>
+            <h3 id="nextTaskTitle">Carregando…</h3>
+            <p id="nextTaskMeta"></p>
+          </div>
+          <div class="hero-side">
+            <div class="hero-time">
+              <span id="nextTaskTime">--:--</span>
+              <small>próxima tarefa</small>
+            </div>
+            <button id="nextTaskDone" class="complete-button" type="button" data-action="toggle-rotina" hidden>
+              ✓ Concluir
+            </button>
+          </div>
+        </article>
+
+        <div class="dashboard-grid">
+
+          <article class="card routine-card">
+            <div class="card-header">
+              <div>
+                <span class="card-label">ROTINA DO DIA</span>
+                <h3>Agenda de hoje</h3>
+              </div>
+              <span class="count-badge" id="routineCount">0 / 0</span>
+            </div>
+            <div id="routineList" class="task-list"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="card-label">DATA ÚNICA</span>
+                <h3>Compromissos com data</h3>
+              </div>
+              <span class="count-badge" id="singleDateCount">00</span>
+            </div>
+            <div id="singleDateList" class="compact-list"></div>
+            <button class="text-button" type="button" data-open-view="demands">Ver todas as demandas →</button>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <span class="card-label">SEM DATA</span>
+                <h3>Fazer o quanto antes</h3>
+              </div>
+              <span class="count-badge" id="pendingCount">00</span>
+            </div>
+            <div id="pendingList" class="compact-list"></div>
+            <button class="text-button" type="button" data-open-view="rodrigo" data-rotulo="abrir-pedidos">Abrir pedidos do gestor →</button>
+          </article>
+
+          <article class="card te-painel">
+            <div class="card-header">
+              <div>
+                <span class="card-label">CORPO E MENTE</span>
+                <h3>Treino e estudo</h3>
+              </div>
+              <span class="count-badge" id="teHojeCount">0 / 0</span>
+            </div>
+            <div id="teHojeLista" class="compact-list"></div>
+            <div class="te-links">
+              <button class="text-button" type="button" data-open-view="treino">Treino →</button>
+              <button class="text-button" type="button" data-open-view="estudo">Estudo →</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===================== TODAS AS DEMANDAS ===================== -->
+      <section id="view-demands" class="view">
+
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">GESTÃO</span>
+            <h2>Todas as Demandas</h2>
+          </div>
+          <button class="primary-button" type="button" data-open-view="input">+ Nova tarefa</button>
+        </div>
+
+        <div class="filter-bar">
+          <button class="filter active" type="button" data-filter="all">Todas</button>
+          <button class="filter" type="button" data-filter="recorrente">Recorrentes</button>
+          <button class="filter" type="button" data-filter="data">Data única</button>
+          <button class="filter" type="button" data-filter="pendencia">Sem data</button>
+          <button class="filter" type="button" data-filter="rodrigo" data-rotulo="gestor">Gestor</button>
+        </div>
+
+        <article class="card table-card">
+          <div class="table-head">
+            <span>Demanda</span>
+            <span>Tipo</span>
+            <span>Prazo</span>
+            <span>Status</span>
+            <span></span>
+          </div>
+          <div id="demandsRows"></div>
+        </article>
+      </section>
+
+      <!-- ===================== RODRIGO ===================== -->
+      <section id="view-rodrigo" class="view">
+
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">ATRIBUIÇÕES</span>
+            <h2 data-rotulo="pedidos">Pedidos do gestor</h2>
+          </div>
+          <div class="heading-actions">
+            <span class="today-badge" id="rodrigoBadge">00 PENDENTES</span>
+            <button class="primary-button" type="button" data-novo="rodrigo">+ Novo pedido</button>
+          </div>
+        </div>
+
+        <div class="rodrigo-grid" id="rodrigoGrid"></div>
+      </section>
+
+      <!-- ===================== TREINO ===================== -->
+      <section id="view-treino" class="view">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">SAÚDE</span>
+            <h2>Treino</h2>
+          </div>
+          <div class="heading-actions">
+            <button class="secondary-button" type="button" data-action="te-treino-avulso">Registrar treino</button>
+            <button class="primary-button" type="button" data-action="te-plano-novo">+ Treino no plano</button>
+          </div>
+        </div>
+        <div id="treinoConteudo"></div>
+      </section>
+
+      <!-- ===================== ESTUDO ===================== -->
+      <section id="view-estudo" class="view">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">APRENDIZADO</span>
+            <h2>Estudo</h2>
+          </div>
+          <div class="heading-actions">
+            <button class="secondary-button" type="button" data-action="te-estudo-registrar">Registrar estudo</button>
+            <button class="primary-button" type="button" data-action="te-materia-nova">+ Matéria</button>
+          </div>
+        </div>
+        <div id="estudoConteudo"></div>
+      </section>
+
+      <!-- ===================== PLANEJAMENTO ===================== -->
+      <section id="view-planejamento" class="view">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">ESTRATÉGIA</span>
+            <h2>Planejamento</h2>
+          </div>
+          <span class="today-badge" id="planoTituloDia">AMANHÃ</span>
+        </div>
+
+        <article class="card te-bloco plano-controles">
+          <div class="plano-controles-grid">
+            <div>
+              <span class="card-label">PLANEJAR</span>
+              <div class="plano-chips">
+                <button class="plano-chip active" type="button" data-plano-alvo="amanha">Amanhã</button>
+                <button class="plano-chip" type="button" data-plano-alvo="hoje">Hoje</button>
+              </div>
+            </div>
+            <div>
+              <span class="card-label">MODO</span>
+              <div class="plano-chips">
+                <button class="plano-chip active" type="button" data-plano-modo="completo">Completo (com o que ficou)</button>
+                <button class="plano-chip" type="button" data-plano-modo="estrategico">Só estratégico</button>
+              </div>
+            </div>
+            <div>
+              <span class="card-label">O QUE PLANEJAR <span class="opcional">(as três = geral)</span></span>
+              <div class="days-options">
+                <label class="day-chip"><input type="checkbox" name="planoFoco" value="trabalho" checked><span>Trabalho</span></label>
+                <label class="day-chip"><input type="checkbox" name="planoFoco" value="treino" checked><span>Treino</span></label>
+                <label class="day-chip"><input type="checkbox" name="planoFoco" value="estudo" checked><span>Estudo</span></label>
+              </div>
+            </div>
+          </div>
+          <label class="plano-obs">
+            <span>Pedidos especiais <span class="opcional">(opcional, viram prioridade)</span></span>
+            <textarea id="planoObs" rows="3" placeholder="Ex.: hoje não vou conseguir terminar o relatório da Melhor Plano e ele não pode passar de amanhã; coloca às 10h e pode tirar o B.I desse horário. Tenho médico às 15h."></textarea>
+          </label>
+          <div class="plano-acoes">
+            <button class="save-button" type="button" id="planoGerar">Gerar plano</button>
+            <span class="te-dica">Usa 1 chamada da IA. Também dá para pedir por voz: “Gideon, planeja meu dia de amanhã…”.</span>
+          </div>
+          <div id="planoErro" class="form-message error" role="alert"></div>
+        </article>
+
+        <div class="plano-layout">
+          <div id="planoFatos" class="plano-coluna"></div>
+          <div id="planoResultado" class="plano-coluna"></div>
+        </div>
+      </section>
+
+      <!-- ===================== PROCESSOS ===================== -->
+      <section id="view-processes" class="view">
+
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">DOCUMENTAÇÃO</span>
+            <h2>Base de Processos Mapeados</h2>
+          </div>
+          <button class="primary-button" type="button" data-action="proc-new">+ Novo processo</button>
+        </div>
+
+        <div class="process-layout">
+          <aside class="process-menu card" id="processMenu"></aside>
+          <article class="card process-content" id="processContent"></article>
+        </div>
+      </section>
+
+      <!-- ===================== INPUT ===================== -->
+      <section id="view-input" class="view">
+
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">CADASTRO</span>
+            <h2>Input de Tarefas</h2>
+          </div>
+        </div>
+
+        <div class="form-wrapper">
+          <article class="card task-form-card">
+            <div class="form-title">
+              <span class="card-label">NOVA TAREFA</span>
+              <h3>Adicionar ao seu sistema</h3>
+              <p>Escolha o tipo e preencha os campos. A tarefa já entra no Painel do Dia e no Banco de Tarefas.</p>
+            </div>
+
+            <div class="type-switch">
+              <button class="type-option active" type="button" data-tipo="recorrente">Recorrente</button>
+              <button class="type-option" type="button" data-tipo="data">Data única</button>
+              <button class="type-option" type="button" data-tipo="pendencia">Sem data</button>
+              <button class="type-option" type="button" data-tipo="rodrigo" data-rotulo="pedido">Pedido do gestor</button>
+            </div>
+
+            <form id="taskForm" novalidate>
+              <label>
+                Título da tarefa
+                <input type="text" id="taskInput" name="descricao" placeholder="Ex.: Atualizar relatório de vendas" autocomplete="off">
+              </label>
+
+              <div class="form-grid" data-campos="recorrente">
+                <label>
+                  Empresa
+                  <input type="text" id="taskEmpresa" name="empresa" placeholder="Ex.: Geral, Melego, Power" list="empresasList" autocomplete="off">
+                </label>
+                <label>
+                  Horário
+                  <input type="time" id="taskHorario" name="horario">
+                </label>
+              </div>
+              <datalist id="empresasList"></datalist>
+
+              <fieldset class="days-picker" data-campos="recorrente">
+                <legend>Dias da semana</legend>
+                <div class="days-options">
+                  <label class="day-chip"><input type="checkbox" name="dias" value="Segunda" checked><span>Seg</span></label>
+                  <label class="day-chip"><input type="checkbox" name="dias" value="Terça" checked><span>Ter</span></label>
+                  <label class="day-chip"><input type="checkbox" name="dias" value="Quarta" checked><span>Qua</span></label>
+                  <label class="day-chip"><input type="checkbox" name="dias" value="Quinta" checked><span>Qui</span></label>
+                  <label class="day-chip"><input type="checkbox" name="dias" value="Sexta" checked><span>Sex</span></label>
+                  <label class="day-chip"><input type="checkbox" name="dias" value="Sábado"><span>Sáb</span></label>
+                  <label class="day-chip"><input type="checkbox" name="dias" value="Domingo"><span>Dom</span></label>
+                </div>
+              </fieldset>
+
+              <label data-campos="data" hidden>
+                Data de conclusão
+                <input type="date" id="taskData" name="data">
+              </label>
+
+              <label>
+                Observação
+                <textarea id="taskObs" name="observacao" rows="3" placeholder="Detalhes ou instruções da tarefa (opcional)"></textarea>
+              </label>
+
+              <div class="voice-row">
+                <button type="button" id="voiceButton" class="voice-button">
+                  <span class="mic-icon"></span>
+                  <span id="voiceLabel">Adicionar por voz</span>
+                </button>
+                <span class="voice-help">Fale o título da tarefa; ele aparece no primeiro campo.</span>
+              </div>
+
+              <button class="save-button" type="submit">Salvar tarefa</button>
+              <div id="formMessage" class="form-message" role="status"></div>
+            </form>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===================== BANCO DE TAREFAS ===================== -->
+      <section id="view-manage" class="view">
+
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">BASE EDITÁVEL</span>
+            <h2>Banco de Tarefas</h2>
+          </div>
+
+        </div>
+
+        <article class="card manage-card">
+          <div class="card-header">
+            <div><span class="card-label">RECORRENTES</span><h3>Rotina semanal</h3></div>
+            <div class="heading-actions">
+              <span class="count-badge" id="manageRecurringCount">00</span>
+              <button class="primary-button" type="button" data-novo="recorrente">+ Adicionar recorrente</button>
+            </div>
+          </div>
+          <div id="manageRecurringList" class="manage-list"></div>
+        </article>
+
+        <div class="manage-grid">
+          <article class="card manage-card">
+            <div class="card-header">
+              <div><span class="card-label">SEM DATA</span><h3>Pendências</h3></div>
+              <span class="count-badge" id="managePendingCount">00</span>
+            </div>
+            <div id="managePendingList" class="manage-list"></div>
+            <button class="secondary-button" type="button" data-novo="pendencia">+ Adicionar pendência</button>
+          </article>
+
+          <article class="card manage-card">
+            <div class="card-header">
+              <div><span class="card-label">DATA ÚNICA</span><h3>Compromissos agendados</h3></div>
+              <span class="count-badge" id="manageSingleCount">00</span>
+            </div>
+            <div id="manageSingleList" class="manage-list"></div>
+            <button class="secondary-button" type="button" data-novo="data">+ Adicionar data única</button>
+          </article>
+        </div>
+
+        <article class="card manage-card storage-card">
+          <div class="card-header">
+            <div><span class="card-label">ARMAZENAMENTO</span><h3>Nuvem (Supabase)</h3></div>
+            <span class="status neutral" id="storageBadge">Conectando…</span>
+          </div>
+          <p>Tudo que você altera é salvo na hora na nuvem e aparece em qualquer aparelho em que você entrar com seu e-mail. Sem internet, o sistema continua funcionando e envia as alterações quando a conexão voltar.</p>
+          <div class="backup-actions">
+            <button class="secondary-button" id="exportBackup" type="button">Baixar backup</button>
+            <button class="secondary-button" id="importBackup" type="button">Restaurar backup</button>
+            <input type="file" id="importFile" accept=".json,application/json" hidden>
+          </div>
+        </article>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===================== JARVIS ===================== -->
+  <button id="jarvisOrb" class="jarvis-orb" type="button"
+    aria-label="Abrir o Gideon" aria-controls="jarvisPanel" aria-expanded="false" title="Gideon (Alt + J)">
+    <span class="orb-ring"></span>
+    <span class="orb-ring orb-ring-inner"></span>
+    <span class="orb-core"></span>
+  </button>
+
+  <section id="jarvisPanel" class="jarvis-panel" aria-label="Jarvis" hidden>
+    <header class="jarvis-head">
+      <div class="jarvis-title">
+        <strong>GIDEON</strong>
+        <span id="jarvisStatus">Pronto</span>
+        <small id="jarvisUso" class="jarvis-uso"></small>
+      </div>
+      <div class="jarvis-head-tools">
+        <button type="button" class="jarvis-icon" id="jarvisReset" title="Nova conversa" aria-label="Nova conversa">↺</button>
+        <button type="button" class="jarvis-icon" id="jarvisSettingsBtn" title="Configurações" aria-label="Configurações">⚙</button>
+        <button type="button" class="jarvis-icon" id="jarvisClose" title="Fechar (Esc)" aria-label="Fechar">✕</button>
+      </div>
+    </header>
+
+    <div id="jarvisSettings" class="jarvis-settings" hidden>
+      <label>
+        Inteligência
+        <select id="jcProvedor">
+          <option value="servidor">Gemini (incluso, sem chave)</option>
+          <option value="gemini">Gemini (Google) — usar minha chave</option>
+          <option value="openai">ChatGPT (OpenAI)</option>
+          <option value="anthropic">Claude (Anthropic)</option>
+        </select>
+      </label>
+      <label>
+        Chave da API
+        <input type="password" id="jcChave" placeholder="Cole sua chave aqui" autocomplete="off" spellcheck="false">
+      </label>
+      <label>
+        Modelo
+        <input type="text" id="jcModelo" autocomplete="off" spellcheck="false">
+      </label>
+      <label>
+        Voz
+        <select id="jcVoz"></select>
+      </label>
+      <label>
+        Velocidade da fala <span id="jcVelocidadeValor">1.05x</span>
+        <input type="range" id="jcVelocidade" min="0.8" max="1.4" step="0.05">
+      </label>
+      <label class="jarvis-toggle">
+        <input type="checkbox" id="jcContinuo">
+        Conversa contínua (volta a ouvir depois de responder)
+      </label>
+      <label class="jarvis-toggle">
+        <input type="checkbox" id="jcAvisos">
+        Avisar em voz alta no horário de cada tarefa
+      </label>
+      <p class="jarvis-note">A chave fica salva só neste navegador. Nunca escreva a chave no código que vai para o GitHub.</p>
+      <div class="jarvis-settings-actions">
+        <button type="button" class="primary-button" id="jcSalvar">Salvar</button>
+        <button type="button" class="edit-button" id="jcTestar">Testar voz</button>
+        <button type="button" class="delete-button" id="jcApagar">Apagar chave</button>
+      </div>
+    </div>
+
+    <div id="jarvisLog" class="jarvis-log" aria-live="polite"></div>
+
+    <div class="jarvis-quick">
+      <button type="button" data-jarvis-prompt="Me dá o resumo do dia.">Resumo do dia</button>
+      <button type="button" data-jarvis-prompt="O que eu faço agora?">O que faço agora?</button>
+      <button type="button" data-jarvis-prompt="O que está atrasado?">Atrasadas</button>
+      <button type="button" data-jarvis-prompt="Como fica meu dia amanhã?">Amanhã</button>
+      <button type="button" data-jarvis-prompt="Quais são os pedidos do gestor em aberto?" data-rotulo="gestor" data-rotulo-prompt>Gestor</button>
+    </div>
+
+    <div id="jarvisInterim" class="jarvis-interim" hidden></div>
+
+    <form id="jarvisForm" class="jarvis-input">
+      <button type="button" id="jarvisMic" class="jarvis-mic" aria-label="Falar com o Jarvis">
+        <span class="mic-icon"></span>
+      </button>
+      <input id="jarvisText" type="text" placeholder="Fale ou digite um pedido…" autocomplete="off">
+      <button type="submit" class="jarvis-send" aria-label="Enviar">↑</button>
+    </form>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="script.js"></script>
+  <script src="treino-estudo.js"></script>
+  <script src="planejamento.js"></script>
+  <script src="nuvem.js"></script>
+  <script src="jarvis-v4.js"></script>
+  <script>
+    // Avisa se o arquivo do Jarvis não estiver na pasta
+    window.addEventListener("load", () => {
+      if (window.JARVIS_VERSAO !== "v5") {
+        alert("O arquivo jarvis-v4.js não foi encontrado. Coloque-o na mesma pasta do index.html.");
+      }
+    });
+  </script>
+</body>
+</html>
