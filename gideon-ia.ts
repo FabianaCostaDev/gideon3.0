@@ -15,8 +15,19 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+// Versão do servidor: aparece no link de teste para conferir o que está publicado
+const VERSAO = "v4";
+
 // O primeiro é o principal; os outros são reserva, em ordem.
-const MODELOS_PERMITIDOS = ["gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"];
+// Além desses, o servidor pergunta ao Google quais modelos "flash"
+// a sua chave tem e usa esses também (os que não existem são ignorados).
+const MODELOS_PERMITIDOS = [
+  "gemini-3.1-flash-lite",
+  "gemini-flash-lite-latest",
+  "gemini-2.5-flash-lite",
+  "gemini-flash-latest",
+  "gemini-2.5-flash",
+];
 const LIMITE_PADRAO = 50;
 
 const CORS = {
@@ -33,6 +44,40 @@ function responder(corpo: unknown, status = 200) {
 }
 
 // Projetos novos usam SUPABASE_SECRET_KEYS; os antigos, SUPABASE_SERVICE_ROLE_KEY
+// Modelos que a sua chave realmente tem (guardado por 6 horas)
+let cacheModelos: { lista: string[]; quando: number } | null = null;
+
+function versaoDo(nome: string): number {
+  const m = nome.match(/gemini-(\d+(?:\.\d+)?)/);
+  return m ? Number(m[1]) : 0;
+}
+
+async function modelosDisponiveis(chave: string): Promise<string[]> {
+  if (cacheModelos && Date.now() - cacheModelos.quando < 6 * 3600 * 1000) return cacheModelos.lista;
+  try {
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", {
+      headers: { "x-goog-api-key": chave },
+    });
+    const j = await r.json();
+    const lista: string[] = (j.models || [])
+      .filter((m: { supportedGenerationMethods?: string[] }) => (m.supportedGenerationMethods || []).includes("generateContent"))
+      .map((m: { name: string }) => String(m.name).replace(/^models\//, ""))
+      .filter((n: string) => /flash/i.test(n) && !/image|tts|audio|live|embed|robotics|computer|exp/i.test(n));
+
+    // Ordem: versões estáveis antes das de teste, mais novas primeiro, "lite" primeiro (cota maior)
+    lista.sort((a, b) =>
+      Number(/preview/i.test(a)) - Number(/preview/i.test(b)) ||
+      versaoDo(b) - versaoDo(a) ||
+      Number(!/lite/i.test(a)) - Number(!/lite/i.test(b))
+    );
+
+    if (lista.length) cacheModelos = { lista, quando: Date.now() };
+    return lista;
+  } catch {
+    return [];
+  }
+}
+
 function chaveDoServidor(): string | undefined {
   const antiga = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (antiga) return antiga;
@@ -45,7 +90,15 @@ function chaveDoServidor(): string | undefined {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  if (req.method !== "POST") return responder({ error: { message: "Use POST." } }, 405);
+  if (req.method !== "POST") {
+    const url = new URL(req.url);
+    if (url.searchParams.has("modelos")) {
+      const chave = Deno.env.get("GEMINI_API_KEY");
+      const lista = chave ? await modelosDisponiveis(chave) : [];
+      return responder({ versao: VERSAO, chave_configurada: !!chave, principal: MODELOS_PERMITIDOS[0], modelos_flash_da_sua_chave: lista });
+    }
+    return responder({ error: { message: `Use POST. Servidor Gideon ${VERSAO}` } }, 405);
+  }
 
   try {
     const chaveGemini = Deno.env.get("GEMINI_API_KEY");
@@ -76,15 +129,20 @@ Deno.serve(async (req) => {
 
     // 3. Repassa o pedido para o Gemini com a chave do servidor
     const { modelo, corpo } = await req.json();
-    const modeloFinal = MODELOS_PERMITIDOS.includes(modelo) ? modelo : MODELOS_PERMITIDOS[0];
+    const disponiveis = await modelosDisponiveis(chaveGemini);
+    const conhecidos = [...new Set([...MODELOS_PERMITIDOS, ...disponiveis])];
+    const modeloFinal = conhecidos.includes(modelo) ? modelo : MODELOS_PERMITIDOS[0];
     if (!corpo || typeof corpo !== "object") {
       return responder({ error: { message: "Pedido inválido." } }, 400);
     }
 
     // Começa pelo modelo pedido e, se precisar, passa para os reservas
-    const fila = [modeloFinal, ...MODELOS_PERMITIDOS.filter((m) => m !== modeloFinal)];
+    const reservas = conhecidos.filter((m) => m !== modeloFinal && (!disponiveis.length || disponiveis.includes(m)));
+    const fila = [modeloFinal, ...reservas].slice(0, 6);
     const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
     let ultimo = { status: 500, texto: JSON.stringify({ error: { message: "Gemini indisponível." } }) };
+    const tentados: string[] = [];
+    let ultimoSobrecarga: { status: number; texto: string } | null = null;
 
     for (const modeloAtual of fila) {
       for (let tentativa = 0; tentativa < 2; tentativa++) {
@@ -97,12 +155,14 @@ Deno.serve(async (req) => {
           },
         );
         const texto = await resposta.text();
+        tentados.push(`${modeloAtual}:${resposta.status}`);
 
         if (resposta.ok) {
           return new Response(texto, { status: 200, headers: { ...CORS, "Content-Type": "application/json" } });
         }
 
         ultimo = { status: resposta.status, texto };
+        if ([429, 500, 503].includes(resposta.status)) ultimoSobrecarga = ultimo;
 
         // Sobrecarga (503/500): espera um pouco e tenta de novo no mesmo modelo
         if ((resposta.status === 503 || resposta.status === 500) && tentativa === 0) {
@@ -116,10 +176,13 @@ Deno.serve(async (req) => {
       if (![404, 429, 500, 503].includes(ultimo.status)) break;
     }
 
-    return new Response(ultimo.texto, {
-      status: ultimo.status,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
+    // Prefere mostrar a sobrecarga (mais útil que "modelo não encontrado") e lista o que foi tentado
+    const final = ultimo.status === 404 && ultimoSobrecarga ? ultimoSobrecarga : ultimo;
+    let mensagem = "Gemini indisponível.";
+    try {
+      mensagem = JSON.parse(final.texto)?.error?.message || mensagem;
+    } catch { /* texto simples */ }
+    return responder({ error: { message: `${mensagem} [${VERSAO} · tentei ${tentados.join(", ")}]` } }, final.status);
   } catch (e) {
     return responder({ error: { message: `Erro no servidor do Gideon: ${(e as Error)?.message ?? e}` } }, 500);
   }
