@@ -5,6 +5,8 @@
 // - Só atende quem está logado no site.
 // - Limite de usos por pessoa por dia (protege a cota gratuita).
 // - Só permite os modelos da lista abaixo.
+// - Se o Gemini estiver sobrecarregado, tenta de novo e usa um
+//   modelo reserva (também gratuito).
 //
 // Segredos necessários (Edge Functions > Secrets):
 //   GEMINI_API_KEY             sua chave do Google AI Studio
@@ -13,7 +15,8 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const MODELOS_PERMITIDOS = ["gemini-3.1-flash-lite"];
+// O primeiro é o principal; os outros são reserva, em ordem.
+const MODELOS_PERMITIDOS = ["gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"];
 const LIMITE_PADRAO = 50;
 
 const CORS = {
@@ -78,18 +81,43 @@ Deno.serve(async (req) => {
       return responder({ error: { message: "Pedido inválido." } }, 400);
     }
 
-    const resposta = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modeloFinal}:generateContent`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": chaveGemini },
-        body: JSON.stringify(corpo),
-      },
-    );
+    // Começa pelo modelo pedido e, se precisar, passa para os reservas
+    const fila = [modeloFinal, ...MODELOS_PERMITIDOS.filter((m) => m !== modeloFinal)];
+    const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    let ultimo = { status: 500, texto: JSON.stringify({ error: { message: "Gemini indisponível." } }) };
 
-    const texto = await resposta.text();
-    return new Response(texto, {
-      status: resposta.status,
+    for (const modeloAtual of fila) {
+      for (let tentativa = 0; tentativa < 2; tentativa++) {
+        const resposta = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modeloAtual}:generateContent`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": chaveGemini },
+            body: JSON.stringify(corpo),
+          },
+        );
+        const texto = await resposta.text();
+
+        if (resposta.ok) {
+          return new Response(texto, { status: 200, headers: { ...CORS, "Content-Type": "application/json" } });
+        }
+
+        ultimo = { status: resposta.status, texto };
+
+        // Sobrecarga (503/500): espera um pouco e tenta de novo no mesmo modelo
+        if ((resposta.status === 503 || resposta.status === 500) && tentativa === 0) {
+          await espera(1200);
+          continue;
+        }
+        break;
+      }
+
+      // Erros que não melhoram trocando de modelo (chave inválida, pedido inválido): para aqui
+      if (![404, 429, 500, 503].includes(ultimo.status)) break;
+    }
+
+    return new Response(ultimo.texto, {
+      status: ultimo.status,
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   } catch (e) {
