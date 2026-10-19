@@ -1692,6 +1692,9 @@ Object.assign(acoes, {
     "te-notas-filtro": id => { filtroNotasMateria = id || ""; }
 });
 
+// Formulário em janela reaproveitado por outros módulos (ex.: atividades)
+window.abrirFormularioTE = abrirFormulario;
+
 // Telas novas no menu
 views.treino = "view-treino";
 views.estudo = "view-estudo";
