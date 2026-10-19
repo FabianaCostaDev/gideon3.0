@@ -23,7 +23,7 @@ window.JARVIS_VERSAO = VERSAO_JARVIS;
 // "Gemini (incluso, sem chave)" fala direto com o Gemini.
 // Deixe vazio ("") para usar o servidor do Supabase (gideon-ia).
 // =========================================================
-const CHAVE_GEMINI_FIXA = "AQ.Ab8RN6LFihUyXK2vL7cyRv6-28YXEhJw3h7GHSDi4NzE5w1FBQ";
+const CHAVE_GEMINI_FIXA = "";
 
 const CHAVE_CONFIG = "personalOS_jarvis";
 const CHAVE_AVISOS = "personalOS_jarvisAvisos";
