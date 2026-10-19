@@ -530,79 +530,88 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 }
 
 
-
 /* =========================================================
    CORES DOS MÓDULOS
-   Treino: verde + amarelo   ·   Estudo: vermelho + branco
-   Só os destaques mudam; fundo e cartões seguem o tema.
+   Treino: verde (identidade e positivo) + amarelo (destaques)
+   Estudo: vermelho (identidade) + branco (positivo)
+   O que "faltou" fica discreto. Fundo e cartões seguem o tema.
    ========================================================= */
 
 #view-treino {
   --mod: #34D399;           /* verde */
-  --mod-2: #FACC15;         /* amarelo */
-  --mod-suave: rgba(52, 211, 153, .12);
-  --mod-borda: rgba(52, 211, 153, .18);
+  --mod-2: #FACC15;         /* amarelo: só destaques */
+  --mod-positivo: #34D399;
+  --mod-suave: rgba(52, 211, 153, .11);
+  --mod-borda: rgba(52, 211, 153, .22);
   --mod-texto: #A7F3D0;
 }
 
 #view-estudo {
-  --mod: #FB7185;           /* vermelho rosado (lê bem no escuro) */
+  --mod: #F43F5E;           /* vermelho vivo, legível no escuro */
   --mod-2: #F8FAFC;         /* branco */
-  --mod-suave: rgba(251, 113, 133, .12);
-  --mod-borda: rgba(251, 113, 133, .2);
-  --mod-texto: #FECDD3;
+  --mod-positivo: #F8FAFC;
+  --mod-suave: rgba(244, 63, 94, .11);
+  --mod-borda: rgba(244, 63, 94, .24);
+  --mod-texto: #FDA4AF;
 }
 
-/* Títulos e rótulos */
+/* Identidade: títulos e rótulos */
 :is(#view-treino, #view-estudo) .eyebrow { color: var(--mod); }
-:is(#view-treino, #view-estudo) .card-label { color: var(--mod-texto); opacity: .72; }
-:is(#view-treino, #view-estudo) .section-heading h2 { text-shadow: 0 0 28px var(--mod-suave); }
+:is(#view-treino, #view-estudo) .card-label { color: var(--mod-texto); opacity: .7; }
 
-/* Cartões: borda e brilho de canto na cor do módulo */
-:is(#view-treino, #view-estudo) .card {
+/* Brilho colorido só nos cartões principais */
+:is(#view-treino, #view-estudo) .te-stat,
+#view-treino .te-colunas:first-of-type > .card:first-child,
+#view-estudo .card:has(.crono) {
   border-color: var(--mod-borda);
   background:
     radial-gradient(420px 160px at 0% 0%, var(--mod-suave), transparent 70%),
     linear-gradient(165deg, rgba(18, 27, 46, .92) 0%, rgba(11, 17, 30, .94) 60%);
 }
 
+/* Números do topo: linha fina na cor positiva */
 :is(#view-treino, #view-estudo) .te-stat {
   box-shadow:
-    inset 0 2px 0 var(--mod),
-    inset 0 1px 0 rgba(255, 255, 255, .04),
+    inset 0 1px 0 color-mix(in srgb, var(--mod-positivo) 55%, transparent),
     0 20px 50px -20px rgba(0, 0, 0, .55);
 }
 
-/* Barras de progresso */
-:is(#view-treino, #view-estudo) .barra i,
+/* Barras de progresso: cor positiva */
+#view-treino .barra i { background: linear-gradient(90deg, #10B981, #34D399); }
+#view-estudo .barra i,
 .barra-estudo i {
-  background: linear-gradient(90deg, var(--mod, #FB7185), var(--mod-2, #F8FAFC));
+  background: linear-gradient(90deg, rgba(248, 250, 252, .75), #F8FAFC);
+  box-shadow: 0 0 10px rgba(248, 250, 252, .35);
 }
 
-.barra-estudo i { --mod: #FB7185; --mod-2: #F8FAFC; }
+#view-treino .meta-texto b { color: #34D399; }
+#view-estudo .meta-texto b { color: #F8FAFC; }
 
-:is(#view-treino, #view-estudo) .meta-texto b { color: var(--mod); }
-
-/* Botões */
+/* Botões principais */
 #view-treino .primary-button {
   border-color: transparent;
-  background: linear-gradient(135deg, #34D399, #FACC15);
+  background: #34D399;
   color: #052E16;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 10px 26px -10px rgba(52, 211, 153, .6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 10px 24px -12px rgba(52, 211, 153, .7);
+}
+
+#view-treino .primary-button:hover {
+  filter: brightness(1.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 0 0 3px rgba(250, 204, 21, .18), 0 12px 28px -12px rgba(250, 204, 21, .5);
 }
 
 #view-estudo .primary-button,
 #view-estudo .save-button {
   border-color: transparent;
-  background: linear-gradient(135deg, #E11D48, #FB7185);
+  background: linear-gradient(135deg, #E11D48, #F43F5E);
   color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 10px 26px -10px rgba(251, 113, 133, .6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 10px 24px -12px rgba(244, 63, 94, .7);
 }
 
-:is(#view-treino, #view-estudo) .primary-button:hover,
+#view-estudo .primary-button:hover,
 #view-estudo .save-button:hover {
   filter: brightness(1.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 12px 32px -10px var(--mod);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 12px 28px -10px rgba(244, 63, 94, .65);
 }
 
 :is(#view-treino, #view-estudo) .secondary-button:hover {
@@ -610,47 +619,51 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   background: var(--mod-suave);
 }
 
-:is(#view-treino, #view-estudo) .text-button { color: var(--mod); }
+:is(#view-treino, #view-estudo) .text-button { color: var(--mod-texto); }
 
 :is(#view-treino, #view-estudo) .complete-button:hover,
 :is(#view-treino, #view-estudo) .mini-complete:hover {
-  border-color: var(--mod);
-  color: var(--mod-texto);
-  background: var(--mod-suave);
+  border-color: var(--mod-positivo);
+  color: var(--mod-positivo);
+  background: color-mix(in srgb, var(--mod-positivo) 8%, transparent);
 }
 
 /* Etiquetas */
-:is(#view-treino, #view-estudo) .tag { color: var(--mod); }
-#view-estudo .tag.rodrigo { color: var(--mod-2); }
+:is(#view-treino, #view-estudo) .tag { color: var(--mod-texto); }
+#view-estudo .tag.rodrigo { color: #F8FAFC; }
 
 /* Abas do estudo */
-#view-estudo .te-abas .plano-chip.active {
-  color: #fff;
-  border-color: rgba(251, 113, 133, .55);
-  background: rgba(251, 113, 133, .14);
-  box-shadow: 0 0 20px -8px rgba(251, 113, 133, .7);
-}
-
-#view-estudo .te-aba-n { background: rgba(251, 113, 133, .22); color: #fff; }
-
+#view-estudo .te-abas .plano-chip.active,
 #view-estudo .plano-chip.active {
-  border-color: rgba(251, 113, 133, .5);
-  background: rgba(251, 113, 133, .12);
+  color: #fff;
+  border-color: rgba(244, 63, 94, .55);
+  background: rgba(244, 63, 94, .13);
+  box-shadow: 0 0 18px -8px rgba(244, 63, 94, .7);
 }
+
+#view-estudo .te-aba-n { background: rgba(244, 63, 94, .24); color: #fff; }
 
 /* Faixa dos últimos 14 dias */
-#view-treino .dia-treino.feito i    { background: rgba(52, 211, 153, .55); border-color: rgba(52, 211, 153, .8); }
-#view-treino .dia-treino.extra i    { background: rgba(250, 204, 21, .45); border-color: rgba(250, 204, 21, .75); }
-#view-treino .dia-treino.pendente i { border: 1px dashed rgba(250, 204, 21, .8); }
-#view-treino .te-legenda .extra::before { background: rgba(250, 204, 21, .85); }
+:is(#view-treino, #view-estudo) .dia-treino.faltou i {
+  background: transparent;
+  border: 1px dashed rgba(148, 163, 184, .4);
+}
+:is(#view-treino, #view-estudo) .te-legenda .faltou::before {
+  background: transparent;
+  border: 1px dashed rgba(148, 163, 184, .7);
+}
 
-#view-estudo .dia-treino.feito i    { background: rgba(248, 250, 252, .78); border-color: #F8FAFC; box-shadow: 0 0 12px rgba(248, 250, 252, .25); }
-#view-estudo .dia-treino.extra i    { background: rgba(251, 113, 133, .5); border-color: rgba(251, 113, 133, .8); }
-#view-estudo .dia-treino.faltou i   { background: transparent; border: 1px dashed rgba(251, 113, 133, .7); }
-#view-estudo .dia-treino.pendente i { border: 1px dashed rgba(248, 250, 252, .7); }
-#view-estudo .te-legenda .feito::before  { background: #F8FAFC; }
-#view-estudo .te-legenda .extra::before  { background: rgba(251, 113, 133, .85); }
-#view-estudo .te-legenda .faltou::before { background: transparent; border: 1px dashed rgba(251, 113, 133, .9); }
+#view-treino .dia-treino.feito i    { background: rgba(52, 211, 153, .55); border-color: rgba(52, 211, 153, .85); }
+#view-treino .dia-treino.extra i    { background: rgba(250, 204, 21, .45); border-color: rgba(250, 204, 21, .8); }
+#view-treino .dia-treino.pendente i { border: 1px dashed rgba(250, 204, 21, .85); }
+#view-treino .te-legenda .feito::before { background: #34D399; }
+#view-treino .te-legenda .extra::before { background: #FACC15; }
+
+#view-estudo .dia-treino.feito i    { background: rgba(248, 250, 252, .8); border-color: #F8FAFC; box-shadow: 0 0 12px rgba(248, 250, 252, .25); }
+#view-estudo .dia-treino.extra i    { background: rgba(248, 250, 252, .35); border-color: rgba(248, 250, 252, .6); }
+#view-estudo .dia-treino.pendente i { border: 1px dashed rgba(244, 63, 94, .85); }
+#view-estudo .te-legenda .feito::before { background: #F8FAFC; }
+#view-estudo .te-legenda .extra::before { background: rgba(248, 250, 252, .45); }
 
 /* Estudo: tópicos, cronômetro, trabalhos e caderno */
 #view-estudo .topico.is-done .task-check {
@@ -659,13 +672,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   color: #9F1239;
 }
 
-#view-estudo button.task-check:hover { border-color: var(--mod); }
+#view-estudo button.task-check:hover { border-color: #F8FAFC; }
 
 #view-estudo .crono.ativo .card-label { color: var(--mod); opacity: 1; }
-#view-estudo .crono-tempo { text-shadow: 0 0 26px rgba(251, 113, 133, .45); }
-
-#view-estudo .kanban-coluna { border-color: rgba(251, 113, 133, .12); }
-#view-estudo .kanban-topo .count-badge { border-color: rgba(251, 113, 133, .25); }
+#view-estudo .crono-tempo { text-shadow: 0 0 26px rgba(244, 63, 94, .4); }
 
 #view-estudo .nota-card.fixada {
   border-color: rgba(248, 250, 252, .35);
@@ -674,11 +684,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 
 #view-estudo .prova-conteudo { border-left: 2px solid var(--mod); }
 
-/* Treino: check dos tópicos/etapas feitos fica verde (padrão) */
-
 /* Menu lateral: item ativo na cor do módulo */
 .nav-item[data-view="treino"].active {
-  background: linear-gradient(90deg, rgba(52, 211, 153, .14), rgba(250, 204, 21, .03) 70%);
+  background: linear-gradient(90deg, rgba(52, 211, 153, .14), rgba(52, 211, 153, .02) 70%);
   border-color: rgba(52, 211, 153, .26);
   box-shadow: inset 2px 0 0 #34D399, 0 0 24px -12px rgba(52, 211, 153, .7);
 }
@@ -686,11 +694,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .nav-item[data-view="treino"]:hover .nav-icon { color: #6EE7B7; }
 
 .nav-item[data-view="estudo"].active {
-  background: linear-gradient(90deg, rgba(251, 113, 133, .14), rgba(248, 250, 252, .03) 70%);
-  border-color: rgba(251, 113, 133, .28);
-  box-shadow: inset 2px 0 0 #FB7185, 0 0 24px -12px rgba(251, 113, 133, .7);
+  background: linear-gradient(90deg, rgba(244, 63, 94, .14), rgba(244, 63, 94, .02) 70%);
+  border-color: rgba(244, 63, 94, .28);
+  box-shadow: inset 2px 0 0 #F43F5E, 0 0 24px -12px rgba(244, 63, 94, .7);
 }
-.nav-item[data-view="estudo"].active .nav-icon { color: #FB7185; }
+.nav-item[data-view="estudo"].active .nav-icon { color: #F43F5E; }
 .nav-item[data-view="estudo"]:hover .nav-icon { color: #FDA4AF; }
 
 /* Painel do Dia: etiquetas de treino e estudo */
@@ -698,7 +706,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .tag.tag-estudo { color: #FB7185; }
 .item-estudo .crono-tempo-mini { color: #FDA4AF !important; }
 
-/* Planejamento: blocos de estudo da agenda em vermelho (treino já é verde) */
-.plano-item.tipo-estudo { box-shadow: inset 2px 0 0 #FB7185; }
+/* Planejamento: blocos da agenda */
+.plano-item.tipo-estudo { box-shadow: inset 2px 0 0 #F43F5E; }
 .plano-item.tipo-treino { box-shadow: inset 2px 0 0 #34D399; }
-
