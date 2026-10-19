@@ -38,7 +38,9 @@ const SINCRONIZADAS = {
     [CHAVE_PROCESSOS]: "processos",
     personalOS_treinos: "treinos",
     personalOS_estudos: "estudos",
-    personalOS_planos: "planos"
+    personalOS_planos: "planos",
+    personalOS_atividades: "atividades",
+    personalOS_atvConfig: "atvConfig"
 };
 
 const LOCAL_POR_NOME = Object.fromEntries(
@@ -49,15 +51,21 @@ const LOCAL_POR_NOME = Object.fromEntries(
 const HIST_LOCAL = "personalOS_hist_";
 const HIST_NUVEM = "hist_";
 
+// Trajetos das atividades: personalOS_rota_<id>  <->  rota_<id>
+const ROTA_LOCAL = "personalOS_rota_";
+const ROTA_NUVEM = "rota_";
+
 function nomeNaNuvem(chaveLocal) {
     if (SINCRONIZADAS[chaveLocal]) return SINCRONIZADAS[chaveLocal];
     if (chaveLocal.startsWith(HIST_LOCAL)) return HIST_NUVEM + chaveLocal.slice(HIST_LOCAL.length);
+    if (chaveLocal.startsWith(ROTA_LOCAL)) return ROTA_NUVEM + chaveLocal.slice(ROTA_LOCAL.length);
     return null;
 }
 
 function chaveLocalDe(nome) {
     if (LOCAL_POR_NOME[nome]) return LOCAL_POR_NOME[nome];
     if (nome.startsWith(HIST_NUVEM)) return HIST_LOCAL + nome.slice(HIST_NUVEM.length);
+    if (nome.startsWith(ROTA_NUVEM)) return ROTA_LOCAL + nome.slice(ROTA_NUVEM.length);
     return null;
 }
 
@@ -67,7 +75,7 @@ function chavesSincronizadasLocais() {
     const chaves = new Set(Object.keys(SINCRONIZADAS));
     for (let i = 0; i < localStorage.length; i++) {
         const chave = localStorage.key(i);
-        if (chave && ehHistorico(chave)) chaves.add(chave);
+        if (chave && (ehHistorico(chave) || chave.startsWith(ROTA_LOCAL))) chaves.add(chave);
     }
     return [...chaves];
 }
@@ -163,6 +171,7 @@ function iniciarBaseVazia() {
     gravarLocalSemEnviar("personalOS_treinos", { plano: [], sessoes: [] });
     gravarLocalSemEnviar("personalOS_estudos", { materias: [], sessoes: [], provas: [] });
     gravarLocalSemEnviar("personalOS_planos", {});
+    gravarLocalSemEnviar("personalOS_atividades", []);
 }
 
 // Junta dois meses de histórico (dois aparelhos gravando ao mesmo tempo)
