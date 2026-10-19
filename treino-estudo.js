@@ -1577,9 +1577,9 @@ function renderizarCartaoPainel() {
 
     alvo.innerHTML = `
         ${crono ? `
-            <div class="compact-item crono-mini">
+            <div class="compact-item crono-mini item-estudo">
                 <div>
-                    <span class="tag">Estudando agora</span>
+                    <span class="tag tag-estudo">Estudando agora</span>
                     <strong>${esc(nomeMateria(crono.materiaId) || "Matéria")}</strong>
                     <small class="crono-tempo-mini" data-cronometro-inicio="${esc(crono.inicio)}">${formatarCronometro(Date.now() - new Date(crono.inicio).getTime())}</small>
                 </div>
@@ -1589,7 +1589,7 @@ function renderizarCartaoPainel() {
         ${t.planoHoje.map(p => `
             <div class="compact-item ${p.feito ? "is-done" : ""}">
                 <div>
-                    <span class="tag">Treino</span>
+                    <span class="tag tag-treino">Treino</span>
                     <strong>${esc(p.tipo)}</strong>
                     <small>${p.horario ? `${esc(p.horario)} · ` : ""}${formatarMinutos(p.duracao)}</small>
                 </div>
@@ -1601,7 +1601,7 @@ function renderizarCartaoPainel() {
         ${e.planoHoje.map(p => `
             <div class="compact-item ${p.feito ? "is-done" : ""}">
                 <div>
-                    <span class="tag">Estudo</span>
+                    <span class="tag tag-estudo">Estudo</span>
                     <strong>${esc(nomeMateria(p.materiaId) || "Matéria")}</strong>
                     <small>${p.horario ? `${esc(p.horario)} · ` : ""}${formatarMinutos(p.duracao)}</small>
                 </div>
@@ -1613,9 +1613,9 @@ function renderizarCartaoPainel() {
         ${e.metaSemana || e.minutosSemana ? `
             <div class="compact-item">
                 <div class="te-cresce">
-                    <span class="tag">Estudo · semana</span>
+                    <span class="tag tag-estudo">Estudo · semana</span>
                     <strong>${formatarMinutos(e.minutosSemana)}${e.metaSemana ? ` de ${formatarMinutos(e.metaSemana)}` : ""}</strong>
-                    ${e.metaSemana ? `<div class="barra"><i style="width:${Math.round(progresso * 100)}%"></i></div>` : ""}
+                    ${e.metaSemana ? `<div class="barra barra-estudo"><i style="width:${Math.round(progresso * 100)}%"></i></div>` : ""}
                 </div>
                 <button class="mini-complete" type="button" data-action="te-estudo-registrar" title="Registrar estudo">+</button>
             </div>` : ""}
