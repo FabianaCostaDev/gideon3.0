@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gideon — Gerenciador</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="refinamento.css">
      <script src="clima.js"></script>
@@ -334,6 +335,11 @@
             <button class="primary-button" type="button" data-action="te-plano-novo">+ Treino no plano</button>
           </div>
         </div>
+        <div class="plano-chips te-abas treino-abas" role="tablist">
+          <button class="plano-chip active" type="button" role="tab" aria-selected="true" data-action="treino-aba" data-id="geral">Treinos</button>
+          <button class="plano-chip" type="button" role="tab" aria-selected="false" data-action="treino-aba" data-id="gps">📍 Atividades GPS</button>
+        </div>
+        <div id="atividadesConteudo" hidden></div>
         <div id="treinoConteudo"></div>
       </section>
 
@@ -649,7 +655,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="treino-estudo.js"></script>
+  <script src="atividades.js"></script>
   <script src="planejamento.js"></script>
   <script src="nuvem.js"></script>
   <script src="jarvis-v4.js"></script>
